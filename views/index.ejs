@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Live Debate</title>
+
+        <link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet">
+        <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    </head>
+    <body>
+        <video src="" id="video" style="width:500px; height:500px;" autoplay="true"></video>
+        <canvas style="display:none;" id="preview"></canvas>
+        <div><img id="play" width="400"></div>
+    </body>
+    <script type="text/javascript">
+        var canvas = document.getElementById("preview");
+        var context = canvas.getContext("2d");
+        
+        canvas.width = 900;
+        canvas.height = 700;
+        
+        context.width = canvas.width;
+        context.height = canvas.height;
+        
+        var video = document.getElementById('video');
+        
+        var socket = io();
+        
+        const loadCamera = (stream) => {
+            video.srcObject = stream;
+        }
+        
+        const loadFail = () => { console.error('Fail') }
+        
+        const viewVideo = (video, context) => {
+            context.drawImage(video, 0, 0, context.width, context.height);
+            socket.emit('stream', canvas.toDataURL('image/webp'));
+        }
+        
+        const play = document.getElementById('play');
+        
+        socket.on('stream', (image) => {
+            play.setAttribute('src', image);
+        })
+        
+        navigator.getUserMedia = ( navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msgGetUserMedia );
+        
+        if (navigator.getUserMedia) {
+            navigator.getUserMedia({ video: true, audio: false }, loadCamera, loadFail);
+            
+            setInterval(() => {
+                viewVideo(video, context);
+            }, 50);
+        }
+        
+    </script>
+</html>
